@@ -30,6 +30,10 @@ let loaders = [
     exclude: /node_modules/
   },
   {
+    test: /\.html/,
+    loader: 'raw'
+  },
+  {
     test: /\.less$/,
     loader: ExtractTextPlugin.extract('style', 'css!less')
   }
