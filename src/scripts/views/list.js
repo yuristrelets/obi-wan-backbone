@@ -9,8 +9,8 @@ export class LordsListView extends View {
       tagName: 'section',
       className: 'css-scrollable-list',
       events: {
-        'click .css-button-up': 'onUp',
-        'click .css-button-down': 'onDown'
+        'click .css-button-up': 'onScrollUp',
+        'click .css-button-down': 'onScrollDown'
       }
     });
 
@@ -18,19 +18,40 @@ export class LordsListView extends View {
   }
 
   initialize() {
-    //
+    //this.listenTo(this.collection, 'all', (event, ...args) => { console.log('->', event, args); });
+    //this.listenTo(this.collection, '', this.render);
+    this.listenTo(this.collection, 'change scroll', this.render);
+
+    this.listenTo(this.collection, 'loadedUp', this.loadedUp);
+    this.listenTo(this.collection, 'loadedDown', this.loadedDown);
   }
 
-  onUp() {
-    console.log('up');
+  onScrollUp() {
+    this.collection.scrollUp();
   }
 
-  onDown() {
-    console.log('down');
+  onScrollDown() {
+    this.collection.scrollDown();
+  }
+
+  loadedUp() {
+    this.$('.css-button-up').addClass('css-button-disabled');
+  }
+
+  loadedDown() {
+    this.$('.css-button-down').addClass('css-button-disabled');
   }
 
   render() {
-    this.$el.html(this.template());
+    const vars = {
+      lords: this.collection.pluck('data'),
+      disableScrollUp: !this.collection.canScrollUp(),
+      disableScrollDown: !this.collection.canScrollDown()
+    };
+
+    this.$el.html(
+      this.template(vars)
+    );
 
     return this.$el;
   }
