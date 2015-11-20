@@ -1,30 +1,33 @@
-import { locationReceiverUrl } from '../config';
+const WS_CLOSE_NORMAL = 1000;
 
 const parse = JSON.parse;
+const log   = console.info.bind(console);
 
 export class LocationReceiver {
-  constructor(callback) {
+  constructor(options) {
     this.ws = null;
-    this.callback = callback;
+
+    this.url      = options.url;
+    this.callback = options.onNotify;
   }
 
   // private
 
-  onOpenHandler() {
-    console.info('ws opened');
+  onOpen() {
+    log('ws opened');
   }
 
-  onMessageHandler(event) {
+  onMessage(event) {
     if (event.data && this.callback) {
       this.callback(parse(event.data));
     }
   }
 
-  onCloseHandler(event) {
-    console.info('ws closed', event.code);
+  onClose(event) {
+    log('ws closed', event.code);
 
-    if (1000 < event.code) {
-      console.info('ws reconnect...');
+    if (WS_CLOSE_NORMAL < event.code) {
+      log('ws reconnect...');
       this.connect();
     }
   }
@@ -32,11 +35,11 @@ export class LocationReceiver {
   // public
 
   connect() {
-    this.ws = new WebSocket(locationReceiverUrl);
+    this.ws = new WebSocket(this.url);
 
-    this.ws.addEventListener('open', ::this.onOpenHandler, false);
-    this.ws.addEventListener('close', ::this.onCloseHandler, false);
-    this.ws.addEventListener('message', ::this.onMessageHandler, false);
+    this.ws.addEventListener('open', this.onOpen.bind(this), false);
+    this.ws.addEventListener('close', this.onClose.bind(this), false);
+    this.ws.addEventListener('message', this.onMessage.bind(this), false);
   }
 
   disconnect() {

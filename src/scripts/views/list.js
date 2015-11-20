@@ -2,7 +2,7 @@ import { View } from 'backbone';
 import template from './list.html';
 import _ from 'underscore';
 
-export class LordsListView extends View {
+export class SithListView extends View {
   constructor(options) {
     super({
       ...options,
@@ -19,11 +19,8 @@ export class LordsListView extends View {
 
   initialize() {
     //this.listenTo(this.collection, 'all', (event, ...args) => { console.log('->', event, args); });
-    //this.listenTo(this.collection, '', this.render);
-    this.listenTo(this.collection, 'change scroll', this.render);
 
-    this.listenTo(this.collection, 'loadedUp', this.loadedUp);
-    this.listenTo(this.collection, 'loadedDown', this.loadedDown);
+    this.collection.on('change scroll', this.render, this);
   }
 
   onScrollUp() {
@@ -34,17 +31,9 @@ export class LordsListView extends View {
     this.collection.scrollDown();
   }
 
-  loadedUp() {
-    this.$('.css-button-up').addClass('css-button-disabled');
-  }
-
-  loadedDown() {
-    this.$('.css-button-down').addClass('css-button-disabled');
-  }
-
   render() {
     const vars = {
-      lords: this.collection.pluck('data'),
+      sith: this.collection.pluck('data'),
       disableScrollUp: !this.collection.canScrollUp(),
       disableScrollDown: !this.collection.canScrollDown()
     };

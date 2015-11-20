@@ -1,13 +1,10 @@
 import { View } from 'backbone';
 import { LocationView } from '../views/location';
-import { LordsListView } from '../views/list';
-
+import { SithListView } from '../views/list';
 import { LocationReceiver } from '../transports/location-receiver';
-
+import { SithCollection } from '../collections/sith';
 import { LocationModel } from '../models/location';
-import { LordsCollection } from '../collections/lords';
-
-import { lordsListMaxItems, lordsListShiftCount, firstLordUrl } from '../config';
+import conf from '../config';
 
 export class AppController extends View {
   constructor(options) {
@@ -18,32 +15,38 @@ export class AppController extends View {
   }
 
   initialize() {
+    this.initializeCollections();
     this.initializeLocationReceiver();
-    this.initializeSithCollection();
     this.initializeViews();
   }
 
   initializeLocationReceiver() {
-    this.locationReceiver = new LocationReceiver(::this.onLocationReceived);
+    this.locationReceiver = new LocationReceiver({
+      url: conf.locationReceiverUrl,
+      onNotify: this.onLocationReceived.bind(this)
+    });
+
     this.locationReceiver.connect();
   }
 
-  initializeSithCollection() {
-    this.sithCollection = new LordsCollection(
-      new Array(lordsListMaxItems),
+  initializeCollections() {
+    this.locationModel = new LocationModel();
+
+    this.sithCollection = new SithCollection(
+      new Array(conf.sithCollectionMaxItems),
       {
-        firstItemUrl: firstLordUrl,
-        scrollItemsCount: lordsListShiftCount
+        initUrl: conf.sithInitUrl,
+        shiftItemsCount: conf.sithCollectionShiftItems
       }
     );
   }
 
   initializeViews() {
     this.locationView = new LocationView({
-      model: new LocationModel()
+      model: this.locationModel
     });
 
-    this.lordsListView = new LordsListView({
+    this.lordsListView = new SithListView({
       collection: this.sithCollection
     });
   }
@@ -54,14 +57,15 @@ export class AppController extends View {
     this.locationReceiver.disconnect();
   }
 
-  onLocationReceived(world) {
-    this.locationView.model.set(world);
+  onLocationReceived(location) {
+    this.locationModel.set(location);
 
-    const localSith = this.sithCollection.getSithFromWorld(world);
+    //{id: 7, name: "Naboo"}
+    const localSith = this.sithCollection.getSithFromLocation(location);
 
     if (localSith.length) {
       console.log(localSith);
-      this.sithCollection.lock(localSith);
+      this.sithCollection.setLock(localSith);
     }
   }
 

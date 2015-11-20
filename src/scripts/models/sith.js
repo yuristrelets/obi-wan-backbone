@@ -1,38 +1,46 @@
 import { Model } from 'backbone';
 import $ from 'jquery';
 
-export class LordModel extends Model {
-  initialize() {
-    this.on('remove', this.abort, this);
-  }
-
+export class SithModel extends Model {
   defaults() {
     return {
+      url: null,
       query: null,
       data: null,
-      loaded: false,
-      selfUrl: null
+      loaded: false
     };
   };
 
+  initialize() {
+    const events = {
+      'change:url': this.load,
+      remove: this.abort
+    };
+
+    this.on(events, this);
+  }
+
+  //
+
   load() {
-    const url = this.get('selfUrl');
+    const url = this.get('url');
+
+    const handle = (data) => {
+      this.set({
+        data: data,
+        loaded: true,
+        loading: false,
+        query: null
+      });
+    };
 
     this.set({
       loading: true,
-      query: $.get(url).done((data) => {
-        this.set({
-          data: data,
-          loaded: true,
-          loading: false,
-          query: null
-        });
-      })
+      query: $.get(url).done(handle)
     });
   }
 
   abort() {
-    console.log('abort');
     let query = this.get('query');
 
     if (query) {
@@ -41,20 +49,20 @@ export class LordModel extends Model {
     }
   }
 
+  // is
+
   isEmpty() {
-    return !this.has('selfUrl');
+    return !this.has('url');
   }
 
   isLoaded() {
     return this.get('loaded');
   }
 
-  isLoadable() {
-    return !this.isLoaded() && !this.isEmpty() && !this.get('loading');
-  }
+  // has
 
-  isFromWorld(worldName) {
-    return this.has('homeworld') && this.get('homeworld') === worldName;
+  hasLocation(location) {
+    return this.has('homeworld') && this.get('homeworld').id === location.id;
   }
 
   hasApprentice() {
@@ -72,6 +80,8 @@ export class LordModel extends Model {
       return false;
     }
   }
+
+  // get
 
   getApprenticeUrl() {
     return this.hasApprentice() && this.get('data').apprentice.url;

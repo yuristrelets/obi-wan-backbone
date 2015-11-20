@@ -1,20 +1,18 @@
 import { Collection } from 'backbone';
-import { LordModel } from '../models/lord';
-import { lordsListMaxItems, lordsListShiftCount, firstLordUrl } from '../config';
-import $ from 'jquery';
+import { SithModel } from '../models/sith';
 
-export class LordsCollection extends Collection {
+export class SithCollection extends Collection {
   constructor(models, options) {
     super(models, {
       ...options,
-      model: LordModel
+      model: SithModel
     });
 
-    this.scrollItemsCount = options.scrollItemsCount || 1;
-    this.locked = false;
+    this.shiftItemsCount = options.shiftItemsCount || 1;
+    this.locked           = false;
 
-    if (options.firstItemUrl) {
-      this.loadSith(this.at(0), options.firstItemUrl);
+    if (options.initUrl) {
+      this.loadSith(this.at(0), options.initUrl);
     }
   }
 
@@ -25,11 +23,7 @@ export class LordsCollection extends Collection {
   }
 
   loadSith(model, url) {
-    model.set({
-      selfUrl: url
-    });
-
-    model.load();
+    model.set({ url });
   }
 
   loadNextSith() {
@@ -60,11 +54,10 @@ export class LordsCollection extends Collection {
       return false;
     }
 
-    const offset     = this.scrollItemsCount;
-    const length     = this.length;
+    const offset     = this.shiftItemsCount;
     const collection = new Array(offset).concat(this.models);
 
-    this.scroll(collection.slice(0, length));
+    this.scroll(collection.slice(0, this.length));
   }
 
   scrollDown() {
@@ -72,39 +65,39 @@ export class LordsCollection extends Collection {
       return false;
     }
 
-    const offset     = this.scrollItemsCount;
+    const offset     = this.shiftItemsCount;
     const collection = this.models.slice().concat(new Array(offset));
 
     this.scroll(collection.slice(offset));
   }
 
-  getSithFromWorld(world) {
-    return this.filter((sith) => {
-      return sith.isFromWorld(world.name);
-    });
+  getSithFromLocation(location) {
+    return this.filter((sith) => sith.hasLocation(location));
   }
 
   isLocked() {
     return this.locked;
   }
 
-  lock(collection) {
+  setLock(collection) {
 
   }
 
+  setCurrentWorld(world) {
+
+  }
+
+  // can
+
   canScrollUp() {
-    return (
-      !this.isLocked() &&
-      this.filter((sith) => sith.isLoaded()).length >= 1 &&
-      this.where({ loaded: true })[0].hasMaster()
-    );
+    const first = this.first();
+
+    return !this.isLocked() && first.isLoaded() && first.hasMaster();
   }
 
   canScrollDown() {
-    return (
-      !this.isLocked() &&
-      this.filter((sith) => sith.isLoaded()).length >= 1 &&
-      this.where({ loaded: true }).reverse()[0].hasApprentice()
-    );
+    const last = this.last();
+
+    return !this.isLocked() && last.isLoaded() && last.hasApprentice();
   }
 }

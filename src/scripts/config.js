@@ -1,5 +1,6 @@
-export const locationReceiverUrl = 'ws://jedi.smartjs.academy';
-export const firstLordUrl = '//jedi.smartjs.academy/dark-jedis/3616';
-
-export const lordsListMaxItems = 5;
-export const lordsListShiftCount = 2;
+export default {
+  sithInitUrl: 'http://jedi.smartjs.academy/dark-jedis/3616',
+  locationReceiverUrl: 'ws://jedi.smartjs.academy',
+  sithCollectionMaxItems: 5,
+  sithCollectionShiftItems: 2
+};
