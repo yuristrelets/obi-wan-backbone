@@ -61,7 +61,7 @@ export class AppController extends View {
     this.locationModel.set(location);
 
     //{id: 7, name: "Naboo"}
-    const localSith = this.sithCollection.getSithFromLocation(location);
+    const localSith = this.sithCollection.getSithFromLocation({id: 7, name: "Naboo"}/*location*/);
 
     if (localSith.length) {
       console.log(localSith);

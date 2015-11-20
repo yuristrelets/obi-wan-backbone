@@ -12,7 +12,7 @@ export class SithCollection extends Collection {
     this.locked           = false;
 
     if (options.initUrl) {
-      this.loadSith(this.at(0), options.initUrl);
+      this.loadInitialSith(options.initUrl);
     }
   }
 
@@ -23,7 +23,11 @@ export class SithCollection extends Collection {
   }
 
   loadSith(model, url) {
-    model.set({ url });
+    model.url = url;
+  }
+
+  loadInitialSith(url) {
+    this.loadSith(this.at(0), url);
   }
 
   loadNextSith() {

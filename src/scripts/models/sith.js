@@ -7,7 +7,9 @@ export class SithModel extends Model {
       url: null,
       query: null,
       data: null,
-      loaded: false
+      loaded: false,
+      loading: false,
+      marked: false
     };
   };
 
@@ -23,20 +25,16 @@ export class SithModel extends Model {
   //
 
   load() {
-    const url = this.get('url');
-
-    const handle = (data) => {
-      this.set({
-        data: data,
-        loaded: true,
-        loading: false,
-        query: null
-      });
-    };
+    const handle = (data) => this.set({
+      data: data,
+      loaded: true,
+      loading: false,
+      query: null
+    });
 
     this.set({
       loading: true,
-      query: $.get(url).done(handle)
+      query: $.get(this.url).done(handle)
     });
   }
 
@@ -49,10 +47,46 @@ export class SithModel extends Model {
     }
   }
 
+  get url() {
+    return this.get('url');
+  }
+
+  set url(value) {
+    this.set('url', value);
+  }
+
+  get marked() {
+    return this.get('marked');
+  }
+
+  set marked(value) {
+    this.set('marked', value);
+  }
+
+  get data() {
+    return this.get('data');
+  }
+
+  get location() {
+    return this.data && this.data.homeworld;
+  }
+
+  get master() {
+    return this.data && this.data.master;
+  }
+
+  get apprentice() {
+    return this.data && this.data.apprentice;
+  }
+
+  get query() {
+    return this.get('query');
+  }
+
   // is
 
   isEmpty() {
-    return !this.has('url');
+    return !this.url;
   }
 
   isLoaded() {
@@ -62,23 +96,19 @@ export class SithModel extends Model {
   // has
 
   hasLocation(location) {
-    return this.has('homeworld') && this.get('homeworld').id === location.id;
+    if (this.location) {
+      return this.location.id === location.id;
+    }
+
+    return false;
   }
 
   hasApprentice() {
-    try {
-      return !!this.get('data').apprentice.id;
-    } catch (err) {
-      return false;
-    }
+    return this.apprentice && this.apprentice.id;
   }
 
   hasMaster() {
-    try {
-      return !!this.get('data').master.id;
-    } catch (err) {
-      return false;
-    }
+    return this.master && this.master.id;
   }
 
   // get
