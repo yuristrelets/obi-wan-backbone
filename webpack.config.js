@@ -63,7 +63,7 @@ if (is.minify) {
 // server
 
 let devServer = {
-  port: 8080,
+  port: 9000,
   contentBase: resolve('dist'),
   stats: {
     modules: false,
