@@ -1,9 +1,9 @@
 <ul class="css-slots">
-  <% sith.each(function(sith) { %>
-  <li class="css-slot<% if (sith.marked) { %> css-slot-marked<% } %>">
-    <% if (sith.loaded) { %>
-    <h3><%= sith.data.name %></h3>
-    <h6>Homeworld: <%= sith.data.homeworld.name %></h6>
+  <% collection.each(function(model) { %>
+  <li class="css-slot<% if (model.marked) { %> css-slot-marked<% } %>">
+    <% if (model.loaded) { %>
+    <h3><%= model.data.name %></h3>
+    <h6>Homeworld: <%= model.data.homeworld.name %></h6>
     <% } %>
   </li>
   <% }); %>

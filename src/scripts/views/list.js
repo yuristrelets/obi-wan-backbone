@@ -33,7 +33,7 @@ export class SithListView extends View {
 
   render() {
     const vars = {
-      sith: this.collection,
+      collection: this.collection,
       disableScrollUp: !this.collection.canScrollUp(),
       disableScrollDown: !this.collection.canScrollDown()
     };
