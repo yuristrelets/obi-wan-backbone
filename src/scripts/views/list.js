@@ -18,9 +18,11 @@ export class SithListView extends View {
   }
 
   initialize() {
-    //this.listenTo(this.collection, 'all', (event, ...args) => { console.log('->', event, args); });
+    const events = {
+      'change scroll': this.render
+    };
 
-    this.collection.on('change scroll', this.render, this);
+    this.collection.on(events, this);
   }
 
   onScrollUp() {
