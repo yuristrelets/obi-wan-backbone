@@ -20,9 +20,20 @@ export class SithCollection extends Collection {
 
   initialize() {
     this.on({
-      'change:loaded': this.loadNextSith
+      'change:loaded': this.onSithLoaded
     }, this);
   }
+
+  //
+
+  onSithLoaded(model, value) {
+    if (value) {
+      this.checkCurrentLocation();
+      this.loadNextSith();
+    }
+  }
+
+  //
 
   loadSith(model, url) {
     model.setUrl(url);
@@ -33,22 +44,24 @@ export class SithCollection extends Collection {
   }
 
   loadNextSith() {
-    if (!this.isLoading()) {
-      this.each((model, index, collection) => {
-        if (model.isLoaded()) {
-          const prev = collection[index - 1];
-          const next = collection[index + 1];
-
-          if (prev && prev.isEmpty() && model.hasMaster()) {
-            this.loadSith(prev, model.getMasterUrl());
-          }
-
-          if (next && next.isEmpty() && model.hasApprentice()) {
-            this.loadSith(next, model.getApprenticeUrl());
-          }
-        }
-      });
+    if (this.isLocked()) {
+      return;
     }
+
+    this.each((model, index, collection) => {
+      if (model.isLoaded()) {
+        const prev = collection[index - 1];
+        const next = collection[index + 1];
+
+        if (prev && prev.isEmpty() && model.hasMaster()) {
+          this.loadSith(prev, model.getMasterUrl());
+        }
+
+        if (next && next.isEmpty() && model.hasApprentice()) {
+          this.loadSith(next, model.getApprenticeUrl());
+        }
+      }
+    });
   }
 
   scroll(collection) {
@@ -97,7 +110,7 @@ export class SithCollection extends Collection {
     return this;
   }
 
-  checkLock() {
+  checkCurrentLocation() {
     const models = this.getByLocation(this.currentLocation);
 
     this.setLock(!!models.length, models);
@@ -113,7 +126,8 @@ export class SithCollection extends Collection {
 
   setCurrentLocation(location) {
     this.currentLocation = location;
-    this.checkLock();
+
+    this.checkCurrentLocation();
   }
 
   setLock(value, models = null) {
@@ -131,10 +145,6 @@ export class SithCollection extends Collection {
 
   isLocked() {
     return this.locked;
-  }
-
-  isLoading() {
-    return !!this.where({ loading: true }).length;
   }
 
   // can

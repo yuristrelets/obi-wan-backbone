@@ -43,7 +43,12 @@ export class SithModel extends Model {
 
     if (query) {
       query.abort();
-      this.clear({ silent: true });
+
+      this.set({
+        query: null,
+        loaded: false,
+        loading: false
+      }, { silent: true });
     }
   }
 
