@@ -55,18 +55,12 @@ export class AppController extends View {
     super.remove();
 
     this.locationReceiver.disconnect();
+    this.sithCollection.abort();
   }
 
   onLocationReceived(location) {
     this.locationModel.set(location);
-
-    //{id: 7, name: "Naboo"}
-    const localSith = this.sithCollection.getSithFromLocation({id: 7, name: "Naboo"}/*location*/);
-
-    if (localSith.length) {
-      console.log(localSith);
-      this.sithCollection.setLock(localSith);
-    }
+    this.sithCollection.setCurrentLocation(location);
   }
 
   render() {

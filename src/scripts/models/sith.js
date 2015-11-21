@@ -6,7 +6,7 @@ export class SithModel extends Model {
     return {
       url: null,
       query: null,
-      data: null,
+      data: {},
       loaded: false,
       loading: false,
       marked: false
@@ -34,7 +34,7 @@ export class SithModel extends Model {
 
     this.set({
       loading: true,
-      query: $.get(this.url).done(handle)
+      query: $.get(this.getUrl()).done(handle)
     });
   }
 
@@ -47,13 +47,17 @@ export class SithModel extends Model {
     }
   }
 
-  get url() {
+  //
+
+  getUrl() {
     return this.get('url');
   }
 
-  set url(value) {
+  setUrl(value) {
     this.set('url', value);
   }
+
+  // TODO: downgrade this block to getters/setters
 
   get marked() {
     return this.get('marked');
@@ -63,30 +67,26 @@ export class SithModel extends Model {
     this.set('marked', value);
   }
 
+  get loaded() {
+    return this.get('loaded');
+  }
+
   get data() {
     return this.get('data');
-  }
-
-  get location() {
-    return this.data && this.data.homeworld;
-  }
-
-  get master() {
-    return this.data && this.data.master;
-  }
-
-  get apprentice() {
-    return this.data && this.data.apprentice;
   }
 
   get query() {
     return this.get('query');
   }
 
+  get location() {
+    return this.data.homeworld;
+  }
+
   // is
 
   isEmpty() {
-    return !this.url;
+    return !this.getUrl();
   }
 
   isLoaded() {
@@ -104,20 +104,20 @@ export class SithModel extends Model {
   }
 
   hasApprentice() {
-    return this.apprentice && this.apprentice.id;
+    return this.data.apprentice && this.data.apprentice.id;
   }
 
   hasMaster() {
-    return this.master && this.master.id;
+    return this.data.master && this.data.master.id;
   }
 
   // get
 
   getApprenticeUrl() {
-    return this.hasApprentice() && this.get('data').apprentice.url;
+    return this.hasApprentice() && this.data.apprentice.url;
   }
 
   getMasterUrl() {
-    return this.hasMaster() && this.get('data').master.url;
+    return this.hasMaster() && this.data.master.url;
   }
 }

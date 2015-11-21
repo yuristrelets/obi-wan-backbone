@@ -1,5 +1,6 @@
 import { Collection } from 'backbone';
 import { SithModel } from '../models/sith';
+import _ from 'underscore';
 
 export class SithCollection extends Collection {
   constructor(models, options) {
@@ -9,7 +10,8 @@ export class SithCollection extends Collection {
     });
 
     this.shiftItemsCount = options.shiftItemsCount || 1;
-    this.locked           = false;
+    this.currentLocation = null;
+    this.locked          = false;
 
     if (options.initUrl) {
       this.loadInitialSith(options.initUrl);
@@ -23,7 +25,7 @@ export class SithCollection extends Collection {
   }
 
   loadSith(model, url) {
-    model.url = url;
+    model.setUrl(url);
   }
 
   loadInitialSith(url) {
@@ -31,24 +33,26 @@ export class SithCollection extends Collection {
   }
 
   loadNextSith() {
-    this.each((model, index, collection) => {
-      if (model.isLoaded()) {
-        const prev = collection[index - 1];
-        const next = collection[index + 1];
+    if (!this.isLoading()) {
+      this.each((model, index, collection) => {
+        if (model.isLoaded()) {
+          const prev = collection[index - 1];
+          const next = collection[index + 1];
 
-        if (prev && prev.isEmpty() && model.hasMaster()) {
-          this.loadSith(prev, model.getMasterUrl());
-        }
+          if (prev && prev.isEmpty() && model.hasMaster()) {
+            this.loadSith(prev, model.getMasterUrl());
+          }
 
-        if (next && next.isEmpty() && model.hasApprentice()) {
-          this.loadSith(next, model.getApprenticeUrl());
+          if (next && next.isEmpty() && model.hasApprentice()) {
+            this.loadSith(next, model.getApprenticeUrl());
+          }
         }
-      }
-    });
+      });
+    }
   }
 
   scroll(collection) {
-    this.set(collection);
+    this.set(collection, { silent: true });
     this.trigger('scroll');
     this.loadNextSith();
   }
@@ -75,20 +79,62 @@ export class SithCollection extends Collection {
     this.scroll(collection.slice(offset));
   }
 
-  getSithFromLocation(location) {
+  resume() {
+    this.loadNextSith();
+  }
+
+  abort(models = null) {
+    _.invoke((models || this.models), 'abort');
+
+    return this;
+  }
+
+  mark(value, models = null) {
+    (models || this.models).forEach((model) => {
+      model.marked = value;
+    });
+
+    return this;
+  }
+
+  checkLock() {
+    const models = this.getByLocation(this.currentLocation);
+
+    this.setLock(!!models.length, models);
+  }
+
+  // get
+
+  getByLocation(location) {
     return this.filter((sith) => sith.hasLocation(location));
   }
+
+  // set
+
+  setCurrentLocation(location) {
+    this.currentLocation = location;
+    this.checkLock();
+  }
+
+  setLock(value, models = null) {
+    this.locked = value;
+    this.mark(false);
+
+    if (this.locked) {
+      this.abort().mark(true, models);
+    } else {
+      this.resume();
+    }
+  }
+
+  // is
 
   isLocked() {
     return this.locked;
   }
 
-  setLock(collection) {
-
-  }
-
-  setCurrentWorld(world) {
-
+  isLoading() {
+    return !!this.where({ loading: true }).length;
   }
 
   // can
