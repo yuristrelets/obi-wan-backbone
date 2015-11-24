@@ -3,71 +3,78 @@ import { SithModel } from '../models/sith';
 import _ from 'underscore';
 
 export class SithCollection extends Collection {
-  constructor(models, options) {
+  constructor(models, { initUrl, shiftItemsCount = 1, ...options }) {
     super(models, {
       ...options,
       model: SithModel
     });
 
-    this.shiftItemsCount = options.shiftItemsCount || 1;
-    this.currentLocation = null;
-    this.locked          = false;
+    this.scrollStep = shiftItemsCount;
 
-    if (options.initUrl) {
-      this.loadInitialSith(options.initUrl);
-    }
+    this.location = null;
+    this.locked   = false;
+
+    // load first model
+    this.loadModel(this.at(0), initUrl);
   }
 
   initialize() {
-    this.on({
-      'change:loaded': this.onSithLoaded
-    }, this);
+    const events = {
+      'change:id scroll relocate': this.update
+    };
+
+    this.on(events, this);
   }
 
-  //
+  abort() {
+    this.invoke('abort');
+  }
 
-  onSithLoaded(model, value) {
-    if (value) {
-      this.checkCurrentLocation();
-      this.loadNextSith();
+  update() {
+    // filter models by location
+    const matched = this.filter(this.hasModelLocation.bind(this, this.location));
+
+    // unmark models
+    this.each(this.markModel.bind(this, false));
+    this.setLocked(!!matched.length);
+
+    if (!this.isLocked()) {
+      return this.loadNextModel();
     }
+
+    // abort requests and mark models
+    this.abort();
+    _.each(matched, this.markModel.bind(this, true));
   }
 
-  //
-
-  loadSith(model, url) {
+  loadModel(model, url) {
     model.setUrl(url);
+    model.load();
   }
 
-  loadInitialSith(url) {
-    this.loadSith(this.at(0), url);
-  }
-
-  loadNextSith() {
-    if (this.isLocked()) {
-      return;
-    }
-
+  loadNextModel() {
     this.each((model, index, collection) => {
       if (model.isLoaded()) {
         const prev = collection[index - 1];
         const next = collection[index + 1];
 
-        if (prev && prev.isEmpty() && model.hasMaster()) {
-          this.loadSith(prev, model.getMasterUrl());
+        if (prev && prev.isLoadable() && model.hasMaster()) {
+          this.loadModel(prev, model.getMasterUrl());
         }
 
-        if (next && next.isEmpty() && model.hasApprentice()) {
-          this.loadSith(next, model.getApprenticeUrl());
+        if (next && next.isLoadable() && model.hasApprentice()) {
+          this.loadModel(next, model.getApprenticeUrl());
         }
       }
     });
   }
 
-  scroll(collection) {
-    this.set(collection, { silent: true });
-    this.trigger('scroll');
-    this.loadNextSith();
+  markModel(value, model) {
+    model.setMarked(value);
+  }
+
+  hasModelLocation(location, model) {
+    return model.hasLocation(location);
   }
 
   scrollUp() {
@@ -75,10 +82,13 @@ export class SithCollection extends Collection {
       return false;
     }
 
-    const offset     = this.shiftItemsCount;
-    const collection = new Array(offset).concat(this.models);
+    const collection = [
+      ...new Array(this.scrollStep),
+      ...this.models
+    ];
 
-    this.scroll(collection.slice(0, this.length));
+    this.set(collection.slice(0, this.length));
+    this.trigger('scroll');
   }
 
   scrollDown() {
@@ -86,59 +96,25 @@ export class SithCollection extends Collection {
       return false;
     }
 
-    const offset     = this.shiftItemsCount;
-    const collection = this.models.slice().concat(new Array(offset));
+    const collection = [
+      ...this.models,
+      ...new Array(this.scrollStep)
+    ];
 
-    this.scroll(collection.slice(offset));
-  }
-
-  resume() {
-    this.loadNextSith();
-  }
-
-  abort(models = null) {
-    _.invoke((models || this.models), 'abort');
-
-    return this;
-  }
-
-  mark(value, models = null) {
-    (models || this.models).forEach((model) => {
-      model.marked = value;
-    });
-
-    return this;
-  }
-
-  checkCurrentLocation() {
-    const models = this.getByLocation(this.currentLocation);
-
-    this.setLock(!!models.length, models);
-  }
-
-  // get
-
-  getByLocation(location) {
-    return this.filter((sith) => sith.hasLocation(location));
+    this.set(collection.slice(this.scrollStep));
+    this.trigger('scroll');
   }
 
   // set
 
-  setCurrentLocation(location) {
-    this.currentLocation = location;
-
-    this.checkCurrentLocation();
+  setLocked(locked) {
+    this.locked = locked;
   }
 
-  setLock(value, models = null) {
-    this.locked = value;
-    this.mark(false);
+  setCurrentLocation(location) {
+    this.location = location;
 
-    if (this.locked) {
-      this.abort().mark(true, models);
-    } else {
-      this.resume();
-    }
+    this.trigger('relocate', this.location);
   }
 
   // is

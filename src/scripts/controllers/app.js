@@ -4,7 +4,7 @@ import { SithListView } from '../views/list';
 import { LocationReceiver } from '../transports/location-receiver';
 import { SithCollection } from '../collections/sith';
 import { LocationModel } from '../models/location';
-import conf from '../config';
+import conf from '../configs/app';
 
 export class AppController extends View {
   constructor(options) {
@@ -20,15 +20,6 @@ export class AppController extends View {
     this.initializeViews();
   }
 
-  initializeLocationReceiver() {
-    this.locationReceiver = new LocationReceiver({
-      url: conf.locationReceiverUrl,
-      onNotify: this.onLocationReceived.bind(this)
-    });
-
-    this.locationReceiver.connect();
-  }
-
   initializeCollections() {
     this.locationModel = new LocationModel();
 
@@ -39,6 +30,15 @@ export class AppController extends View {
         shiftItemsCount: conf.sithCollectionShiftItems
       }
     );
+  }
+
+  initializeLocationReceiver() {
+    this.locationReceiver = new LocationReceiver({
+      url: conf.locationReceiverUrl,
+      onNotify: this.onLocationReceived.bind(this)
+    });
+
+    this.locationReceiver.connect();
   }
 
   initializeViews() {
@@ -64,11 +64,9 @@ export class AppController extends View {
   }
 
   render() {
-    this.$el.append(
+    return this.$el.append(
       this.locationView.render(),
       this.lordsListView.render()
     );
-
-    return this.$el;
   }
 }

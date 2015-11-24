@@ -19,7 +19,7 @@ export class SithListView extends View {
 
   initialize() {
     const events = {
-      'change scroll': this.render
+      'change scroll relocate': this.render
     };
 
     this.collection.on(events, this);
@@ -35,15 +35,11 @@ export class SithListView extends View {
 
   render() {
     const vars = {
-      collection: this.collection,
+      collection: this.collection.toJSON(),
       disableScrollUp: !this.collection.canScrollUp(),
       disableScrollDown: !this.collection.canScrollDown()
     };
 
-    this.$el.html(
-      this.template(vars)
-    );
-
-    return this.$el;
+    return this.$el.html(this.template(vars));
   }
 }

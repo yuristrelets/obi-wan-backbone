@@ -27,7 +27,7 @@ export class LocationReceiver {
     log('ws closed', event.code);
 
     if (WS_CLOSE_NORMAL < event.code) {
-      log('ws reconnect...');
+      log('ws try to reconnect...');
       this.connect();
     }
   }

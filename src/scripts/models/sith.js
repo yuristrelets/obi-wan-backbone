@@ -4,125 +4,94 @@ import $ from 'jquery';
 export class SithModel extends Model {
   defaults() {
     return {
+      id: null,
+      name: null,
       url: null,
-      query: null,
-      data: {},
-      loaded: false,
-      loading: false,
+      master: {},
+      apprentice: {},
+      homeworld: {},
+      request: null,
       marked: false
     };
   };
 
   initialize() {
     const events = {
-      'change:url': this.load,
       remove: this.abort
     };
 
     this.on(events, this);
   }
 
-  //
-
   load() {
-    const handle = (data) => this.set({
-      data: data,
-      loaded: true,
-      loading: false,
-      query: null
-    });
+    const url = this.getUrl();
+    const handler = (data) => this.set({ ...data, request: null });
 
     this.set({
-      loading: true,
-      query: $.get(this.getUrl()).done(handle)
+      request: $.get(url).done(handler)
     });
   }
 
   abort() {
-    let query = this.get('query');
-
-    if (query) {
-      query.abort();
-
-      this.set({
-        query: null,
-        loaded: false,
-        loading: false
-      }, { silent: true });
+    if (this.isLoading()) {
+      this.getRequest().abort();
+      this.set({ request: null }, { silent: true });
     }
   }
 
-  //
+  // get
 
   getUrl() {
     return this.get('url');
   }
 
+  getApprenticeUrl() {
+    return this.get('apprentice').url;
+  }
+
+  getMasterUrl() {
+    return this.get('master').url;
+  }
+
+  getRequest() {
+    return this.get('request');
+  }
+
+  // set
+
   setUrl(value) {
     this.set('url', value);
   }
 
-  // TODO: downgrade this block to getters/setters
-
-  get marked() {
-    return this.get('marked');
-  }
-
-  set marked(value) {
+  setMarked(value) {
     this.set('marked', value);
-  }
-
-  get loaded() {
-    return this.get('loaded');
-  }
-
-  get data() {
-    return this.get('data');
-  }
-
-  get query() {
-    return this.get('query');
-  }
-
-  get location() {
-    return this.data.homeworld;
-  }
-
-  // is
-
-  isEmpty() {
-    return !this.getUrl();
-  }
-
-  isLoaded() {
-    return this.get('loaded');
   }
 
   // has
 
   hasLocation(location) {
-    if (this.location) {
-      return this.location.id === location.id;
-    }
-
-    return false;
+    return this.get('homeworld').id === location.id;
   }
 
   hasApprentice() {
-    return this.data.apprentice && this.data.apprentice.id;
+    return !!this.get('apprentice').id;
   }
 
   hasMaster() {
-    return this.data.master && this.data.master.id;
+    return !!this.get('master').id;
   }
 
-  // get
+  // is
 
-  getApprenticeUrl() {
-    return this.hasApprentice() && this.data.apprentice.url;
+  isLoaded() {
+    return this.has('id');
   }
 
-  getMasterUrl() {
-    return this.hasMaster() && this.data.master.url;
+  isLoading() {
+    return this.has('request');
+  }
+
+  isLoadable() {
+    return !this.isLoaded() && !this.isLoading();
   }
 }

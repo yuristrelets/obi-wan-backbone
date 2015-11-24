@@ -10,12 +10,14 @@ export class LocationView extends View {
   }
 
   initialize() {
-    this.listenTo(this.model, 'change', this.render);
+    const events = {
+      'change': this.render
+    };
+
+    this.model.on(events, this);
   }
 
   render() {
-    this.$el.html(`Obi-Wan currently on ${this.model.get('name')}`);
-
-    return this.$el;
+    return this.$el.html(`Obi-Wan currently on ${this.model.get('name')}`);
   }
 }
