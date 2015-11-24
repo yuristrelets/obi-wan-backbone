@@ -99,7 +99,7 @@ module.exports = {
   },
   progress: true,
   debug: is.development,
-  devtool: is.development ? 'eval' : 'source-map',
+  devtool: is.development ? 'eval-source-map' : 'source-map',
   module: {
     loaders
   },
